@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mörk Borg — Помощник Игрока</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://w3.org viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💀</text></svg>">
+    <style>
+        :root {
+            --bg-color: #121214;
+            --card-color: #1a1a1e;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --accent-color: #3b82f6;
+            --border-color: #2a2a30;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            padding: 20px;
+            max-width: 500px;
+            margin: 0 auto;
+            line-height: 1.5;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 25px;
+        }
+
+        .section {
+            background-color: var(--card-color);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-top: 0;
+            margin-bottom: 15px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        button {
+            background-color: var(--accent-color);
+            color: #ffffff;
+            border: none;
+            padding: 12px 18px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+        }
+
+        button:hover { background-color: #dae90b; }
+        button:active { transform: scale(0.98); }
+
+        .result-box {
+            margin-top: 15px;
+            background-color: var(--bg-color);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            font-size: 0.95rem;
+        }
+
+        .result-item { margin-bottom: 8px; }
+        .result-item:last-child { margin-bottom: 0; }
+        .label { color: var(--text-muted); font-weight: 500; }
+        
+        /* Стили для сетки характеристик */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin: 12px 0;
+            background: #222227;
+            padding: 10px;
+            border-radius: 6px;
+        }
+
+        .dice-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .dice-btn {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+        }
+        .dice-btn:hover {
+            background-color: #1f2937;
+            border-color: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Mörk Borg Companion</h1>
+
+    <div class="section">
+        <h2>Генератор Персонажа</h2>
+        <button onclick="generateCharacter()">Создать новую жертву</button>
+        <div class="result-box" id="character-result">Нажмите кнопку, чтобы вдохнуть жизнь в героя...</div>
+    </div>
+
+    <div class="section">
+        <h2> Бросок костей</h2>
+        <div class="dice-grid">
+            <button class="dice-btn" onclick="rollDice(4)">D4</button>
+            <button class="dice-btn" onclick="rollDice(6)">D6</button>
+            <button class="dice-btn" onclick="rollDice(8)">D8</button>
+            <button class="dice-btn" onclick="rollDice(10)">D10</button>
+            <button class="dice-btn" onclick="rollDice(12)">D12</button>
+            <button class="dice-btn" onclick="rollDice(20)">D20</button>
+        </div>
+        <div class="result-box" id="dice-result" style="text-align: center; font-size: 1.3rem; font-weight: 600;">-</div>
+    </div>
+
+    <script>
+        // РАСШИРЕННЫЕ БАЗЫ ДАННЫХ
+        const names = ["Грим", "Борг", "Кол", "Агнес", "Вулф", "Эгга", "Кнут", "Сигмунд", "Вальд", "Грета", "Морт", "Ульф", "Хаген", "Брунхильд", "Скальд", "Олаф", "Фрейя", "Торг", "Йохан", "Эльза"];
+        
+        const traits = [
+            "Постоянно шепчет мрачные проклятия под нос.",
+            "Панически боится темноты и гаснущих факелов.",
+            "Его зубы сточены в иглы. Постоянно испытывает дикий голод.",
+            "Искренне считает, что весь этот мир — это чей-то кошмар.",
+            "Никогда не смывает засохшую кровь со своего лица.",
+            "Тайно крадет мелкие вещи у своих же союзников.",
+            "Слышит голоса мертвых птиц, которые дают ему советы.",
+            "Покрыт шрамами от ритуальных ожогов.",
+            "Громко и жутко смеется в самые неподходящие моменты.",
+            "Никому не доверяет и постоянно спит с открытыми глазами."
+        ];
+
+        const weapons = [
+            "Ржавый тесак (Урон: d6)",
+            "Длинный боевой кинжал (Урон: d4)",
+            "Тяжелый растрескавшийся молот (Урон: d8)",
+            "Короткий лук (Урон: d6, 10 стрел)",
+            "Зазубренный топор (Урон: d6)",
+            "Старый ржавый меч (Урон: d6)",
+            "Тяжелый двуручный шестопер (Урон: d10)",
+            "Острый могильный штырь (Урон: d4)"
+        ];
+
+        const armors = [
+            "Нет брони (Tier 0)",
+            "Грубая кожаная куртка (Tier 1, -d2 урона)",
+            "Ржавая кольчуга (Tier 2, -d4 урона, тесты Жестокости с помехой)",
+            "Побитый пластинчатый доспех (Tier 3, -d6 урона, скрытность невозможна)"
+        ];
+
+        const items = [
+            "Тухлый окорок (хватит на 1 день)",
+            "Святая вода в треснувшем флаконе",
+            "Веревка из жестких волос висельника (5 метров)",
+            "Факел (горит 1 час) и огниво",
+            "Мешочек со старыми чужими зубами (зачем-то)",
+            "Бутылка дешевого обжигающего пойла",
+            "Старая карта подземелья, на которой все перечеркнуто",
+            "Мел и кусок угля для рисования знаков",
+            "Сушеная крыса на веревочке (талисман)",
+            "Железные кандалы без ключа"
+        ];
+
+        // Функция симуляции броска кубиков 3d6 для характеристик Mörk Borg
+        function getStatModifier() {
+            const sum = (Math.floor(Math.random() * 6) + 1) + (Math.floor(Math.random() * 6) + 1) + (Math.floor(Math.random() * 6) + 1);
+            if (sum <= 4) return -3;
+            if (sum <= 6) return -2;
+            if (sum <= 8) return -1;
+            if (sum <= 12) return 0;
+            if (sum <= 14) return 1;
+            if (sum <= 16) return 2;
+            return 3;
+        }
+
+        function generateCharacter() {
+            const randName = names[Math.floor(Math.random() * names.length)];
+            const randTrait = traits[Math.floor(Math.random() * traits.length)];
+            const randWeapon = weapons[Math.floor(Math.random() * weapons.length)];
+            const randArmor = armors[Math.floor(Math.random() * armors.length)];
+            
+            // Выбираем 2 случайных разных предмета
+            let item1 = items[Math.floor(Math.random() * items.length)];
+            let item2 = items[Math.floor(Math.random() * items.length)];
+            while (item1 === item2) {
+                item2 = items[Math.floor(Math.random() * items.length)];
+            }
+
+            // Считаем характеристики
+            const agility = getStatModifier();
+            const presence = getStatModifier();
+            const toughness = getStatModifier();
+            const strength = getStatModifier();
+
+            // Считаем здоровье (HP) по правилам: d6 + Toughness (минимум 1)
+            let hp = (Math.floor(Math.random() * 6) + 1) + toughness;
+            if (hp < 1) hp = 1;
+
+            // Серебряные монеты: d6 * 10
+            const silver = (Math.floor(Math.random() * 6) + 1) * 10;
+
+            // Форматируем знак плюс для характеристик
+            const f = (val) => val >= 0 ? `+${val}` : val;
+
+            document.getElementById('character-result').innerHTML = `
+                <div class="result-item"><span class="label">Имя:</span> <strong>${randName}</strong></div>
+                <div class="result-item"><span class="label">Здоровье (HP):</span> <strong>${hp}</strong></div>
+                <div class="result-item"><span class="label">Кошелек:</span> ${silver} серебряных монет</div>
+                
+                <div class="stats-grid">
+                    <div><span class="label">Жестокость:</span> ${f(agility)}</div>
+                    <div><span class="label">Сноровка:</span> ${f(presence)}</div>
+                    <div><span class="label">Стойкость:</span> ${f(toughness)}</div>
+                    <div><span class="label">Сила:</span> ${f(strength)}</div>
+                </div>
+
+                <div class="result-item"><span class="label">Особенность:</span> ${randTrait}</div>
+                <div class="result-item"><span class="label">Оружие:</span> ${randWeapon}</div>
+                <div class="result-item"><span class="label">Броня:</span> ${randArmor}</div>
+                <div class="result-item"><span class="label">Имущество:</span> ${item1}, ${item2}</div>
+            `;
+        }
+
+        function rollDice(sides) {
+            const result = Math.floor(Math.random() * sides) + 1;
+            document.getElementById('dice-result').innerHTML = `<span class="label" style="font-size:0.95rem">Результат D${sides}:</span> ${result}`;
+        }
+    </script>
+</body>
+</html>
