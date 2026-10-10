@@ -67,6 +67,18 @@
             transition: background-color 0.2s ease, transform 0.1s ease;
         }
 
+        .btn-secondary {
+        background-color: transparent;
+        color: var(--text-muted);
+        border: 1px solid var(--border-color);
+        margin-top: 10px;
+}
+
+.btn-secondary:hover {
+    background-color: #222227;
+    color: var(--text-main);
+}
+
         button:hover { background-color: #dae90b; }
         button:active { transform: scale(0.98); }
 
@@ -118,6 +130,7 @@
     <div class="section">
         <h2>Генератор Персонажа</h2>
         <button onclick="generateCharacter()">Создать новую жертву</button>
+        <button id="copy-btn" class="btn-secondary" onclick="copyCharacter()" style="display: none;">📋 Скопировать текст</button>
         <div class="result-box" id="character-result">Нажмите кнопку, чтобы вдохнуть жизнь в героя...</div>
     </div>
 
@@ -133,11 +146,17 @@
         </div>
         <div class="result-box" id="dice-result" style="text-align: center; font-size: 1.3rem; font-weight: 600;">-</div>
     </div>
-
+    
+    
     <script>
+
         // РАСШИРЕННЫЕ БАЗЫ ДАННЫХ
         const names = ["Грим", "Борг", "Кол", "Агнес", "Вулф", "Эгга", "Кнут", "Сигмунд", "Вальд", "Грета", "Морт", "Ульф", "Хаген", "Брунхильд", "Скальд", "Олаф", "Фрейя", "Торг", "Йохан", "Эльза"];
         
+
+        let lastGeneratedText = "";
+
+
         const traits = [
             "Постоянно шепчет мрачные проклятия под нос.",
             "Панически боится темноты и гаснущих факелов.",
@@ -221,7 +240,16 @@
             const silver = (Math.floor(Math.random() * 6) + 1) * 10;
 
             // Форматируем знак плюс для характеристик
-            const f = (val) => val >= 0 ? `+${val}` : val;
+            const f = (val) => val >= 0 ? `+${val}` : val
+            // Формируем шаблон текста для буфера обмена
+            lastGeneratedText = `💀 Персонаж Мёрк Борг\n• Имя: ${randName}\n• HP: ${hp} | Серебро: ${silver}\n• Характеристики: Жестокость ${f(agility)}, Сноровка ${f(presence)}, Стойкость ${f(toughness)}, Сила ${f(strength)}\n• Особенность: ${randTrait}\n• Экипировка: ${randWeapon}, ${randArmor}\n• Имущество: ${item1}, ${item2}`;
+
+// Показываем кнопку копирования и сбрасываем ее состояние
+            const copyBtn = document.getElementById('copy-btn');
+            copyBtn.style.display = "block";
+            copyBtn.innerText = "📋 Скопировать текст";
+            copyBtn.style.backgroundColor = "transparent";
+            copyBtn.style.color = "var(--text-muted)";
 
             document.getElementById('character-result').innerHTML = `
                 <div class="result-item"><span class="label">Имя:</span> <strong>${randName}</strong></div>
@@ -246,6 +274,35 @@
             const result = Math.floor(Math.random() * sides) + 1;
             document.getElementById('dice-result').innerHTML = `<span class="label" style="font-size:0.95rem">Результат D${sides}:</span> ${result}`;
         }
+
+        function copyCharacter() {
+    if (!lastGeneratedText) return;
+
+    navigator.clipboard.writeText(lastGeneratedText).then(() => {
+        const copyBtn = document.getElementById('copy-btn');
+        copyBtn.innerText = "✔️ Скопировано!";
+        copyBtn.style.backgroundColor = "var(--success-color)";
+        copyBtn.style.color = "#ffffff";
+    }).catch(err => {
+        alert('Не удалось скопировать текст: ', err);
+    });
+}
     </script>
+
+
+<!-- Yandex.Metrika counter -->
+<script type="text/javascript">
+    (function(m,e,t,r,i,k,a){
+        m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+        m[i].l=1*new Date();
+        for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+        k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
+    })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=113598727', 'ym');
+
+    ym(113598727, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", referrer: document.referrer, url: location.href, accurateTrackBounce:true, trackLinks:true});
+</script>
+<noscript><div><img src="https://mc.yandex.ru/watch/113598727" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+<!-- /Yandex.Metrika counter -->
 </body>
 </html>
+
